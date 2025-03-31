@@ -16,14 +16,65 @@ import { createGenre } from "@/app/actions/genre"
 export default function AddGenrePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState(true)
+  const [errors, setErrors] = useState({
+    nameEnglish: "",
+    nameArabic: "",
+  })
   const router = useRouter()
   const { toast } = useToast()
 
+  // Validation functions
+  const isEnglish = (text: string) => {
+    // Check if text contains only English characters, numbers, and common punctuation
+    const englishRegex = /^[A-Za-z0-9\s.,!?&()\-_]+$/
+    return englishRegex.test(text)
+  }
+
+  const isArabic = (text: string) => {
+    // Check if text contains Arabic characters
+    const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0870-\u089F\s.,!?&()\-_]+$/
+    return arabicRegex.test(text)
+  }
+
+  const validateForm = (formData: FormData) => {
+    const nameEnglish = formData.get("nameEnglish") as string
+    const nameArabic = formData.get("nameArabic") as string
+    let isValid = true
+    const newErrors = {
+      nameEnglish: "",
+      nameArabic: "",
+    }
+
+    if (!isEnglish(nameEnglish)) {
+      newErrors.nameEnglish = "Please enter English characters only"
+      isValid = false
+    }
+
+    if (!isArabic(nameArabic)) {
+      newErrors.nameArabic = "Please enter Arabic characters only"
+      isValid = false
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
+
+    // Validate form before submission
+    if (!validateForm(formData)) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
     formData.set("status", status.toString())
 
     const result = await createGenre(formData)
@@ -67,7 +118,16 @@ export default function AddGenrePage() {
                 placeholder="Enter genre name in English"
                 required
                 disabled={isLoading}
+                onChange={(e) => {
+                  if (!isEnglish(e.target.value) && e.target.value !== "") {
+                    setErrors((prev) => ({ ...prev, nameEnglish: "Please enter English characters only" }))
+                  } else {
+                    setErrors((prev) => ({ ...prev, nameEnglish: "" }))
+                  }
+                }}
+                className={errors.nameEnglish ? "border-red-500" : ""}
               />
+              {errors.nameEnglish && <p className="text-sm text-red-500 mt-1">{errors.nameEnglish}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="nameArabic">Name (Arabic)</Label>
@@ -77,7 +137,16 @@ export default function AddGenrePage() {
                 placeholder="Enter genre name in Arabic"
                 required
                 disabled={isLoading}
+                onChange={(e) => {
+                  if (!isArabic(e.target.value) && e.target.value !== "") {
+                    setErrors((prev) => ({ ...prev, nameArabic: "Please enter Arabic characters only" }))
+                  } else {
+                    setErrors((prev) => ({ ...prev, nameArabic: "" }))
+                  }
+                }}
+                className={errors.nameArabic ? "border-red-500" : ""}
               />
+              {errors.nameArabic && <p className="text-sm text-red-500 mt-1">{errors.nameArabic}</p>}
             </div>
             <div className="flex items-center space-x-2">
               <Switch id="status" checked={status} onCheckedChange={setStatus} disabled={isLoading} />

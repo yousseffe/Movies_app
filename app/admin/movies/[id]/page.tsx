@@ -47,7 +47,7 @@ export default function MovieDetailsPage() {
 
   const formatBudget = (budget: number) => {
     if (!budget) return "N/A"
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(budget)
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "EGP" }).format(budget)
   }
 
   const getVideoType = (url: string) => {

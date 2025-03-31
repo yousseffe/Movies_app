@@ -94,7 +94,7 @@ export function UserNavbar() {
             <LanguageSwitcher />
             <ThemeToggle />
 
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <User className="h-5 w-5" />
@@ -108,7 +108,10 @@ export function UserNavbar() {
                   <Link href="/api/auth/signout">{t("nav.logout")}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
+            <Button className="justify-start">
+              <Link href="/api/auth/signout">{t("nav.logout")}</Link>
+            </Button>
           </div>
         </div>
       </header>

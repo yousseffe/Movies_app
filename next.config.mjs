@@ -15,11 +15,15 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['res.cloudinary.com'],
   },
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    serverActions: {
+      bodySizeLimit: '10mb', // Increase the limit to 10MB
+    },
   },
 }
 
@@ -46,3 +50,4 @@ function mergeConfig(nextConfig, userConfig) {
 }
 
 export default nextConfig
+

@@ -116,7 +116,7 @@ export default async function MovieDetailPage({
                   </span>
                 </div>
                 <p className="text-muted-foreground">{safeMovie.plotEnglish}</p>
-                <div className="flex flex-wrap gap-3">
+                {/* <div className="flex flex-wrap gap-3">
                   <form
                     action={async () => {
                       "use server"
@@ -128,12 +128,12 @@ export default async function MovieDetailPage({
                       Add to Watchlist
                     </Button>
                   </form>
-                </div>
+                </div> */}
                 <div className="pt-4">
                   <div className="space-y-2">
                     <div className="flex">
                       <span className="w-24 font-medium">Budget:</span>
-                      <span>{safeMovie.budget ? `$${safeMovie.budget.toLocaleString()}` : "N/A"}</span>
+                      <span>{safeMovie.budget ? `EGP ${safeMovie.budget.toLocaleString()}` : "N/A"}</span>
                     </div>
                   </div>
                 </div>

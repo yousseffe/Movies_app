@@ -380,7 +380,7 @@ export default function EditMoviePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="budget">Budget (USD)</Label>
+              <Label htmlFor="budget">Budget (EGP)</Label>
               <Input
                 id="budget"
                 value={budget}

@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, Plus, Trash2, LinkIcon } from "lucide-react"
+import { Upload, Plus, Trash2, LinkIcon } from 'lucide-react'
 import { createMovie } from "@/app/actions/movie"
 import { getGenres } from "@/app/actions/genre"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useLanguageValidator } from "@/components/admin/language-validator"
 
 export default function CreateMoviePage() {
   const router = useRouter()
@@ -35,6 +36,13 @@ export default function CreateMoviePage() {
       isTrailer: boolean
     }>
   >([])
+  const [validationErrors, setValidationErrors] = useState({
+    titleEnglish: '',
+    titleArabic: '',
+    plotEnglish: '',
+    plotArabic: ''
+  })
+  const { isEnglish, isArabic } = useLanguageValidator()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -142,14 +150,59 @@ export default function CreateMoviePage() {
     setVideos(updatedVideos)
   }
 
+  const validateForm = (formData: FormData): boolean => {
+    const titleEnglish = formData.get('titleEnglish') as string
+    const titleArabic = formData.get('titleArabic') as string
+    const plotEnglish = formData.get('plotEnglish') as string
+    const plotArabic = formData.get('plotArabic') as string
+    
+    const errors = {
+      titleEnglish: '',
+      titleArabic: '',
+      plotEnglish: '',
+      plotArabic: ''
+    }
+    
+    const titleEnglishValidation = isEnglish(titleEnglish)
+    if (!titleEnglishValidation.isValid) {
+      errors.titleEnglish = titleEnglishValidation.error || ''
+    }
+    
+    const titleArabicValidation = isArabic(titleArabic)
+    if (!titleArabicValidation.isValid) {
+      errors.titleArabic = titleArabicValidation.error || ''
+    }
+    
+    const plotEnglishValidation = isEnglish(plotEnglish)
+    if (!plotEnglishValidation.isValid) {
+      errors.plotEnglish = plotEnglishValidation.error || ''
+    }
+    
+    const plotArabicValidation = isArabic(plotArabic)
+    if (!plotArabicValidation.isValid) {
+      errors.plotArabic = plotArabicValidation.error || ''
+    }
+    
+    setValidationErrors(errors)
+    
+    return !Object.values(errors).some(error => error !== '')
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+    
+    const formData = new FormData(e.currentTarget)
+    
+    // Validate language inputs
+    if (!validateForm(formData)) {
+      setError("Please fix the validation errors before submitting")
+      return
+    }
+    
     setLoading(true)
 
     try {
-      const formData = new FormData(e.currentTarget)
-
       // Add files to formData
       if (posterFile) formData.append("poster", posterFile)
       if (coverFile) formData.append("cover", coverFile)
@@ -195,6 +248,27 @@ export default function CreateMoviePage() {
     }
   }
 
+  const handleInputChange = (field: keyof typeof validationErrors, value: string) => {
+    let error = ''
+    
+    if (field === 'titleEnglish' || field === 'plotEnglish') {
+      const validation = isEnglish(value)
+      if (!validation.isValid) {
+        error = validation.error || ''
+      }
+    } else if (field === 'titleArabic' || field === 'plotArabic') {
+      const validation = isArabic(value)
+      if (!validation.isValid) {
+        error = validation.error || ''
+      }
+    }
+    
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -219,11 +293,31 @@ export default function CreateMoviePage() {
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="titleEnglish">English Name</Label>
-              <Input id="titleEnglish" name="titleEnglish" placeholder="Enter English Name" required />
+              <Input 
+                id="titleEnglish" 
+                name="titleEnglish" 
+                placeholder="Enter English Name" 
+                required 
+                className={validationErrors.titleEnglish ? "border-red-500" : ""}
+                onChange={(e) => handleInputChange('titleEnglish', e.target.value)}
+              />
+              {validationErrors.titleEnglish && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.titleEnglish}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="titleArabic">Arabic Name</Label>
-              <Input id="titleArabic" name="titleArabic" placeholder="Enter Arabic Name" required />
+              <Input 
+                id="titleArabic" 
+                name="titleArabic" 
+                placeholder="Enter Arabic Name" 
+                required 
+                className={validationErrors.titleArabic ? "border-red-500" : ""}
+                onChange={(e) => handleInputChange('titleArabic', e.target.value)}
+              />
+              {validationErrors.titleArabic && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.titleArabic}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="year">Year of Release</Label>
@@ -261,7 +355,7 @@ export default function CreateMoviePage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budget">Budget (USD)</Label>
+              <Label htmlFor="budget">Budget (EGP)</Label>
               <Input id="budget" name="budget" type="number" placeholder="Enter budget" />
             </div>
 
@@ -291,9 +385,13 @@ export default function CreateMoviePage() {
                 id="plotEnglish"
                 name="plotEnglish"
                 placeholder="Enter English Plot"
-                className="min-h-[150px]"
+                className={`min-h-[150px] ${validationErrors.plotEnglish ? "border-red-500" : ""}`}
                 required
+                onChange={(e) => handleInputChange('plotEnglish', e.target.value)}
               />
+              {validationErrors.plotEnglish && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.plotEnglish}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="plotArabic">Arabic Plot</Label>
@@ -301,9 +399,13 @@ export default function CreateMoviePage() {
                 id="plotArabic"
                 name="plotArabic"
                 placeholder="Enter Arabic Plot"
-                className="min-h-[150px]"
+                className={`min-h-[150px] ${validationErrors.plotArabic ? "border-red-500" : ""}`}
                 required
+                onChange={(e) => handleInputChange('plotArabic', e.target.value)}
               />
+              {validationErrors.plotArabic && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.plotArabic}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -455,16 +557,6 @@ export default function CreateMoviePage() {
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
                               <div className="relative h-24 w-40 overflow-hidden rounded-md border bg-muted">
-                                {/* {video.filePreview ? (
-                                  <div className="h-full w-full flex items-center justify-center bg-black">
-                                    <Film className="h-8 w-8 text-white" />
-                                    <span className="text-xs text-white ml-2">Video Preview</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center">
-                                    <Upload className="h-8 w-8 text-muted-foreground" />
-                                  </div>
-                                )} */}
                                 {video.filePreview && (
                                   <video width="200" height="150" controls>
                                     <source src={video.filePreview} type="video/mp4" />
@@ -522,4 +614,3 @@ export default function CreateMoviePage() {
     </div>
   )
 }
-

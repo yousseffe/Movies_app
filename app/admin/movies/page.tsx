@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Eye } from "lucide-react"
+import { Plus, Pencil, Eye } from "lucide-react"
 import Link from "next/link"
 import { deleteMovie } from "@/app/actions/movie"
 import { revalidatePath } from "next/cache"
 import { getMovies } from "@/app/actions/movie"
+import { DeleteButton } from "@/components/admin/delete-button"
 
 // Convert to a server component for more reliable data fetching
 export default async function MoviesPage() {
@@ -103,15 +104,7 @@ export default async function MoviesPage() {
                             </Link>
                           </Button>
                           <form action={handleDelete.bind(null, movie._id)}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              type="submit"
-                              className="h-8 gap-1 text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span>Delete</span>
-                            </Button>
+                            <DeleteButton />
                           </form>
                         </div>
                       </td>

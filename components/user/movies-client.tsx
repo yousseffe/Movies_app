@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronDown, Filter, Search } from "lucide-react"
+import { Filter, Search } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { SortSelector } from "@/components/sort-selector"
@@ -81,7 +81,7 @@ export default function MoviesClient({
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           {/* Filters */}
-          <div className="rounded-lg border bg-card p-4 shadow-sm">
+          <div className="rounded-lg border bg-card p-4 shadow-sm md:sticky md:top-4 self-start">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">{t("movies.filter")}</h2>
               <Button variant="ghost" size="sm" className="h-8 gap-1" asChild>
@@ -96,7 +96,7 @@ export default function MoviesClient({
               {/* Genre Filter */}
               <div>
                 <h3 className="mb-2 font-medium">{t("movies.genre")}</h3>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                   {genres.map((genre) => {
                     const genreId = genre.id
                     const isChecked = Array.isArray(genreFilter)
@@ -105,7 +105,13 @@ export default function MoviesClient({
 
                     return (
                       <div key={genreId} className="flex items-center ">
-                        <Checkbox id={`genre-${genreId}`} name="genre" value={genreId} defaultChecked={isChecked} className="me-2" />
+                        <Checkbox
+                          id={`genre-${genreId}`}
+                          name="genre"
+                          value={genreId}
+                          defaultChecked={isChecked}
+                          className="me-2"
+                        />
                         <Label htmlFor={`genre-${genreId}`} className="text-sm font-normal">
                           {language === "en" ? genre.nameEnglish : genre.nameArabic}
                         </Label>
@@ -177,16 +183,17 @@ export default function MoviesClient({
                 {movies.map((movie) => (
                   <Link key={movie.id} href={`/movies/${movie.id}`}>
                     <Card className="overflow-hidden transition-all hover:shadow-md">
-                      <div className="aspect-[2/3] relative">
-                        <Image
-                          src={movie.poster || "/placeholder.svg?height=400&width=300"}
-                          alt={language === "en" ? movie.titleEnglish : movie.titleArabic}
-                          fill
-                          className="object-cover"
-                        />
-                        <div className="absolute right-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
+                      <div className="aspect-[3/3] relative overflow-hidden">
+                      <Image
+  src={movie.poster || "/placeholder.svg?height=400&width=300"}
+  alt={language === "en" ? movie.titleEnglish : movie.titleArabic}
+  fill
+  className="object-contain rounded-lg"
+/>
+
+                        {/* <div className="absolute right-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           {movie.rating || "N/A"}
-                        </div>
+                        </div> */}
                       </div>
                       <CardContent className="p-3">
                         <h3 className="font-medium line-clamp-1">
@@ -215,8 +222,96 @@ export default function MoviesClient({
               </div>
             )}
 
-            {/* Only show Load More button if there are more movies to load */}
-            {hasMoreMovies && (
+            {/* Pagination */}
+            {totalMovies > 0 && (
+              <div className="mt-8">
+                <div className="flex items-center justify-center">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {/* Previous Page Button */}
+                    <Button variant="outline" size="sm" disabled={page <= 1} asChild>
+                      <Link
+                        href={{
+                          pathname: "/movies",
+                          query: {
+                            ...(searchFilter && { search: searchFilter }),
+                            ...(sortFilter && { sort: sortFilter }),
+                            ...(yearFilter && { year: yearFilter }),
+                            ...(genreFilter && { genre: genreFilter }),
+                            page: Math.max(1, page - 1),
+                          },
+                        }}
+                      >
+                        Previous
+                      </Link>
+                    </Button>
+
+                    {/* Page Numbers */}
+                    {Array.from({ length: Math.min(5, Math.ceil(totalMovies / 12)) }, (_, i) => {
+                      const pageNumber = i + 1
+                      const isCurrentPage = pageNumber === page
+
+                      // Only show 2 pages before and after current page
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === Math.ceil(totalMovies / 12) ||
+                        (pageNumber >= page - 2 && pageNumber <= page + 2)
+                      ) {
+                        return (
+                          <Button key={pageNumber} variant={isCurrentPage ? "default" : "outline"} size="sm" asChild>
+                            <Link
+                              href={{
+                                pathname: "/movies",
+                                query: {
+                                  ...(searchFilter && { search: searchFilter }),
+                                  ...(sortFilter && { sort: sortFilter }),
+                                  ...(yearFilter && { year: yearFilter }),
+                                  ...(genreFilter && { genre: genreFilter }),
+                                  page: pageNumber,
+                                },
+                              }}
+                            >
+                              {pageNumber}
+                            </Link>
+                          </Button>
+                        )
+                      }
+
+                      // Show ellipsis for skipped pages
+                      if (pageNumber === page - 3 || pageNumber === page + 3) {
+                        return (
+                          <span key={pageNumber} className="px-2">
+                            ...
+                          </span>
+                        )
+                      }
+
+                      return null
+                    })}
+
+                    {/* Next Page Button */}
+                    <Button variant="outline" size="sm" disabled={!hasMoreMovies} asChild>
+                      <Link
+                        href={{
+                          pathname: "/movies",
+                          query: {
+                            ...(searchFilter && { search: searchFilter }),
+                            ...(sortFilter && { sort: sortFilter }),
+                            ...(yearFilter && { year: yearFilter }),
+                            ...(genreFilter && { genre: genreFilter }),
+                            page: page + 1,
+                          },
+                        }}
+                      >
+                        Next
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Remove or comment out the old Load More button */}
+            {/* {hasMoreMovies && (
               <div className="mt-8 flex justify-center">
                 <Button variant="outline" className="gap-1" asChild>
                   <Link
@@ -236,7 +331,7 @@ export default function MoviesClient({
                   </Link>
                 </Button>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
